@@ -245,6 +245,9 @@ Observe the details in the log file
 sudo mv /home/jenkins/.kube /home/jenkins/.minikube $HOME
 sudo chown -R $USER $HOME/.kube $HOME/.minikube
 
+    ▪ sudo mv /root/.kube /root/.minikube $HOME
+    ▪ sudo chown -R $USER $HOME/.kube $HOME/.minikube
+
 
 
 
