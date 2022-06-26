@@ -237,6 +237,11 @@ you can see a credential called regcred
 This things in jenkins you can also set it manually
 
 20. Then create pipeline called pipeline-project then select pipeline script from scm
+then give details and build
+while building run your jenkins log in your terminal
+# kubectl -n jenkins logs -f jenkins-0 -c jenkins
+Observe the details in the log file
+
 
 
 
