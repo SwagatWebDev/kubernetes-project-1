@@ -31,7 +31,6 @@ pipeline {
         container('kubectl') {
           withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
             sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
-            sh 'export no_proxy=$no_proxy,*.docker.internal'
             sh 'kubectl --insecure-skip-tls-verify apply -f myweb.yaml'
           }
         }
