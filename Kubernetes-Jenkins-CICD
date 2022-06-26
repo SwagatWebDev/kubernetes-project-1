@@ -1,0 +1,248 @@
+1. Start your minikube cluster
+# minikube start --vm-driver=none
+# minikube status
+
+If you don't have minikube please spin up an ec2 and install minikube cluster
+a. Install Docker
+# sudo apt update && apt -y install docker.io
+b. Install kubectl
+# curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl &&   chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
+c. Install Minikube
+# wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+# sudo cp minikube-linux-amd64 /usr/local/bin/minikube
+# sudo chmod 755 /usr/local/bin/minikube
+d. Start Minikube
+#  apt install conntrack
+#  minikube start --vm-driver=none
+#  minikube status
+e. To show the cluster information:
+# kubectl cluster-info
+f. To check running nodes use the following command:
+# kubectl get nodes
+
+2. Install helm in minikube
+# curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+# sudo apt-get install apt-transport-https --yes
+# echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+# sudo apt-get update
+# sudo apt-get install helm
+
+3. Install Jenkins CI using Kubernetes Helm
+# helm repo add jenkinsci https://charts.jenkins.io
+# helm repo update
+# helm repo list
+# helm search repo jenkinsci
+
+4. Create a namespace called jenkins in kubernetes cluster
+# kubectl create ns jenkins
+To verify
+# kubectl get ns
+Here am going to deploy everything in the namespace
+
+5. So first am going to download my values file from the helm chart so that i can what i can configure in my system
+# helm show values jenkinsci/jenkins > /tmp/jenkins.yaml
+here am seeing jenkins chart from jenkinsci repository and am redirecting to a tmp file jenkins.yaml
+
+6. Now if i edit that file
+# vi /tmp/jenkins.yaml
+replace these details the file with bellow content
+adminUser: "admin"
+adminPassword: "c48f14fa2bbf41979afbcc513cb4db0f"
+
+also changing the service type to NodePort to expose it, if you are running on cloud please use Load Balancer if you provisioned
+serviceType: NodePort
+the define the port number of the NodePort
+nodePort: 32323
+So jenkins will be accessed with the port 32323
+
+Then i need to two more plugins
+one is blue ocean
+Search in google jenkins blue ocean latest version
+https://plugins.jenkins.io/blueocean/
+latest version is: 1.25.5
+will use 1.24.8
+Then the ne plugin will use use AnsiColor which latest version is 1.0.1
+https://plugins.jenkins.io/ansicolor/
+
+Also we need to install kubernetes ci plugin
+https://plugins.jenkins.io/kubernetes-cd/
+Latest version is 2.3.1
+we can use this plugin as
+The current version of this plugin contains multiple vulnerabilities:
+Arbitrary file read vulnerability
+Missing permission checks allow enumerating credentials IDs
+CSRF vulnerability and missing permission checks allow capturing credentials
+we need to find out some alternative here
+
+See blueocean plugin is optional, i want to see it in beautiful blueocean UI
+
+put the bellow content
+  installPlugins:
+    - kubernetes:3600.v144b_cd192ca_a_
+    - workflow-aggregator:581.v0c46fa_697ffd
+    - git:4.11.3
+    - configuration-as-code:1429.v09b_044a_c93de
+    - blueocean:1.25.5
+    - ansicolor:1.0.1
+
+then i will say install latest plugin to true
+  installLatestPlugins: true
+  installLatestSpecifiedPlugins: true
+
+* if you want to search anything say / then use keyword what you want to search
+/persistence
+Here i don't have any dynamic persistence storage i create you have NFS storage use it
+or make it to false if not want to use
+* remember don't use this persistence volume disabled in production environment
+persistence:
+  enabled: false
+
+7. Lets install jenkins helm chart
+# helm install jenkins jenkinsci/jenkins --values /tmp/jenkins.yaml -n jenkins
+we giving name as jenkins, am installing jenkins chart from from jenkinsci helm repo
+then overriding the default configuration by passing the value file from /tmp/jenkins.yaml
+This is what just we have edited
+then am using the jenkins namespace, as we already created that namespace
+
+once executed will get some working message like
+---------------------------------------------------
+NAME: jenkins
+LAST DEPLOYED: Sat Jun 25 09:24:31 2022
+NAMESPACE: jenkins
+STATUS: deployed
+REVISION: 1
+NOTES:
+1. Get your 'admin' user password by running:
+  kubectl exec --namespace jenkins -it svc/jenkins -c jenkins -- /bin/cat /run/secrets/additional/chart-admin-password && echo
+2. Get the Jenkins URL to visit by running these commands in the same shell:
+  export NODE_PORT=$(kubectl get --namespace jenkins -o jsonpath="{.spec.ports[0].nodePort}" services jenkins)
+  export NODE_IP=$(kubectl get nodes --namespace jenkins -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT/login
+
+3. Login with the password from step 1 and the username: admin
+4. Configure security realm and authorization strategy
+5. Use Jenkins Configuration as Code by specifying configScripts in your values.yaml file, see documentation: http:///configuration-as-code and examples: https://github.com/jenkinsci/configuration-as-code-plugin/tree/master/demos
+
+For more information on running Jenkins on Kubernetes, visit:
+https://cloud.google.com/solutions/jenkins-on-container-engine
+
+For more information about Jenkins Configuration as Code, visit:
+https://jenkins.io/projects/jcasc/
+
+
+NOTE: Consider using a custom image with pre-installed plugins
+#################################################################################
+######   WARNING: Persistence is disabled!!! You will lose your data when   #####
+######            the Jenkins pod is terminated.                            #####
+#################################################################################
+-------------------------------------------------------------------------------------
+
+8. Now if i want o check check my jenkins pods are running or not
+# kubectl -n jenkins get all
+Here you can see pod is coming up and you have statefulset
+also will the service information how to access it
+another one is jenkins slave service which up on port 5000
+
+9. Now open a new terminal to see the jenkins pod logs
+# kubectl -n jenkins logs -f jenkins-0 -c jenkins
+jenkins-0 pod has two container one is init container and one is actual jenkins container
+if you want to look logs for multi container pod then you need to specify which container you want to look
+here am -c jenkins because i know this my pod name of actual jenkins which present in statefulset pod
+you will get message in log file like
+2022-06-25 09:25:23.526+0000 [id=22]    INFO    hudson.lifecycle.Lifecycle#onReady: Jenkins is fully up and running
+
+10. lets access jenkins by node port 18.119.121.130:32323
+Lets ignore the warning msg here in jenkins
+click on warning icon then click on configure which of these are shown
+In Hidden security warning section disable all the warning check boxes type
+then save it
+Also am getting some warning for couple of plugins which are out dated
+Then go to Manage Plugins
+Search the plugin Pipeline: Shared Groovy Libraries
+uninstall the plugin if you can
+then say
+http://18.119.121.130:32323/restart and say yes to reload
+
+11. checkout the code
+https://github.com/justmeandopensource/playjenkins.git
+switch to kaniko branch
+
+12. Kaniko is a tool developed by google
+By using this tool you can build container images without having access to the container runtime.
+You no need to have connect to a docker socket. You don't need to have any container running in runtime
+You just need the kaniko tool that's it.
+In Kaniko if you pass a Dockerfile and destination file location like where you want to push your images
+Then Kaniko will build the image for you and push it to any specified image registry .
+
+13. Then we got one more stage that is to Deploy the App into the Kubernetes
+See how we previously do deployments in kubernetes is
+by using Kubernetes Continuous Deploy pipeline which is already deprecated
+As we are not going to use that plugin, we have to use a different approach
+Here we are going to use kubectl container, will discuss about it latter
+Now what am doing is withCredential, that's the default jenkins pipeline credential plugin and
+then we need to create a credential called mykubeconfig and that will contain my kube config file
+and will store as a variable called KUBECONFIG
+Then you can use kubectl command in your container
+
+14. Here am not using any plugin, am using a container that having kubectl binaries inside it
+So am using a very specific docker container that has kubectl binary in it
+so once i lunch the container, will be able to use kubectl
+also am having the kubeconfig file that has been picked from jenkins credential store
+That we are going to create now in sometime
+And the build and push stage is done by the kaniko command line and
+am using a specific container that has kaniko tool built-in
+
+15. The entire pipeline is going to be run on the kubernetes pod define in the builder.yaml
+Let see builder.yaml
+Its a pod definition file, which contains two containers
+one is kubectl container and the other one is the kaniko container
+The entire pipeline is going to run in this pod
+the first stage is build and push stage is going to run in a container called kaniko
+and the second stage is going to run in a container called kubectl
+and those containers details are stored in build.yaml
+
+16. In case of kaniko i need to pass an extra volume mount which we need to create
+The work that kaniko has to do is
+once it build the container image based on the specification in the Dockerfile
+it needs to push to an image registry,
+it can be DockerHub and AWS ECR like that or can be GCR or Azure container registry
+Inorder to push the image the registry needs credential so that's where we are mounting a volume
+so we need to create a kubernetes secret that stores your DockerHub credentials
+and we would be mounting that secrets as a volume inside the kaniko container
+so that kaniko can use the docker credential to push the image to the image registry
+So only by two stages we are doing the CICD Pipeline
+
+17. So we need to do two things
+we need to create a mykubeconfig jenkins credential
+then i need to create a docker secret using my docker credentials
+
+18. Go to Jenkins then Manage jenkins then manage credentials
+click on jenkins then global credentials the add credentials
+select kind as secret file
+select config file(if not copy from .kube directory)
+ID as mykubeconfig and say ok
+
+19. The next thing we need to create a kubernetes secret that contains the docker credentials
+google docker secrets in kubernetes
+then open official link and search for configure-pod-container or
+https://kubernetes.io/docs/tasks/configure-pod-container/_print/
+# kubectl create secret docker-registry regcred --docker-server=<your-registry-server> --docker-username=<your-name> --docker-password=<your-pword> --docker-email=<your-email>
+put your details
+# kubectl -n jenkins create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username=swagatkm --docker-password=Swagat@1994 --docker-email=swagatkumarmishra888@gmail.com
+after executing will get secret/regcred created
+verify it by
+# kubectl -n jenkins get secret
+you can see a credential called regcred
+
+This things in jenkins you can also set it manually
+
+20. Then create pipeline called pipeline-project then select pipeline script from scm
+
+
+
+
+
+
+
+
+
