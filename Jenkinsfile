@@ -32,8 +32,8 @@ pipeline {
           withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
             sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
             sh 'mkdir -p $HOME/.kube'
-            sh 'sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config'
-            sh 'sudo chown $(id -u):$(id -g) $HOME/.kube/config'
+            sh 'cp -i /etc/kubernetes/admin.conf $HOME/.kube/config'
+            sh 'chown $(id -u):$(id -g) $HOME/.kube/config'
             sh 'kubectl apply -f myweb.yaml'
           }
         }
