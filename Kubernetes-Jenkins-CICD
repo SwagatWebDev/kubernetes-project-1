@@ -242,6 +242,9 @@ while building run your jenkins log in your terminal
 # kubectl -n jenkins logs -f jenkins-0 -c jenkins
 Observe the details in the log file
 
+sudo mv /home/jenkins/.kube /home/jenkins/.minikube $HOME
+sudo chown -R $USER $HOME/.kube $HOME/.minikube
+
 
 
 
