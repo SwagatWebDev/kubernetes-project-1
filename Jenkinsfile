@@ -31,9 +31,7 @@ pipeline {
         container('kubectl') {
           withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
             sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" myweb.yaml'
-            sh 'mkdir -p $HOME/.kube'
-            sh 'cp -i /etc/kubernetes/admin.conf $HOME/.kube/config'
-            sh 'chown $(id -u):$(id -g) $HOME/.kube/config'
+            sh 'export no_proxy=$no_proxy,*.docker.internal'
             sh 'kubectl apply -f myweb.yaml'
           }
         }
