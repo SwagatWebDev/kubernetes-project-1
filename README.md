@@ -6,3 +6,6 @@ Here will do continuous deployment to Kubernetes using Jenkins CD pipeline. I wi
 
 Please refer Kubernetes-Jenkins-CICD file for deatil steps
 
+To Provision Kubernetes Minikube Cluster in Terraform, please refer the bellow repository 
+
+https://github.com/swagat030/terraform-minikube-provision.git
