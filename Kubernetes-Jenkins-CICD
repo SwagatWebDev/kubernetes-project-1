@@ -1,24 +1,54 @@
-1. Start your minikube cluster
-# minikube start --vm-driver=none
-# minikube status
+1. Minikube cluster Installation:
 
-If you don't have minikube please spin up an ec2 and install minikube cluster
-a. Install Docker
-# sudo apt update && apt -y install docker.io
-b. Install kubectl
-# curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl &&   chmod +x ./kubectl && sudo mv ./kubectl /usr/local/bin/kubectl
-c. Install Minikube
-# wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-# sudo cp minikube-linux-amd64 /usr/local/bin/minikube
-# sudo chmod 755 /usr/local/bin/minikube
-d. Start Minikube
-#  apt install conntrack
-#  minikube start --vm-driver=none
-#  minikube status
-e. To show the cluster information:
-# kubectl cluster-info
-f. To check running nodes use the following command:
-# kubectl get nodes
+1. Install Minikube Package Dependencies
+Login to your Ubuntu 22.04 / Ubuntu 20.04 system and run following commands to install minikube package dependencies.
+$ sudo apt update
+$ sudo apt install curl wget apt-transport-https -y
+
+b. Install Docker
+Install docker dependencies
+$ sudo apt update
+$ sudo apt install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+
+Enable Docker Repository
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+$ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+Install docker Engine
+$ sudo apt-get update
+$ sudo apt-get install docker-ce docker-ce-cli containerd.io -y
+
+Once the docker is installed, verify it’s service
+$ sudo systemctl status
+
+If you want local user to use docker command without sudo, then add that user to docker group, run
+$ sudo usermod -aG docker $USER
+$ newgrp docker
+
+To use docker command without sudo, logged and login
+$ docker version
+
+Test docker Installation
+To test docker installation, try to spin up ‘hello-world’ container using following docker command,
+$ docker run hello-world
+
+c. Download Minikube binary with wget Run beneath wget command to download minikube binary.
+$ wget https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+$ sudo cp minikube-linux-amd64 /usr/local/bin/minikube
+$ sudo chmod +x /usr/local/bin/minikube
+$ minikube version
+
+d. Download kubectl Utility
+$ curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+$ chmod +x kubectl
+$ sudo mv kubectl /usr/local/bin/
+$ kubectl version
+
+e. Start Minikube with Docker Driver
+minikube start --driver=docker
+
+Please use bellow link for your reference
+https://www.linuxbuzz.com/how-to-install-minikube-on-ubuntu/
 
 2. Install helm in minikube
 # curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
