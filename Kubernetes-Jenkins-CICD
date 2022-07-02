@@ -47,6 +47,11 @@ $ kubectl version
 e. Start Minikube with Docker Driver
 minikube start --driver=docker
 
+$ minikube addons list
+
+$ minikube addons enable ingress
+$ minikube addons enable dashboard
+
 Please use bellow link for your reference
 https://www.linuxbuzz.com/how-to-install-minikube-on-ubuntu/
 
