@@ -1,6 +1,6 @@
 1. Minikube cluster Installation:
 
-1. Install Minikube Package Dependencies
+a. Install Minikube Package Dependencies
 Login to your Ubuntu 22.04 / Ubuntu 20.04 system and run following commands to install minikube package dependencies.
 $ sudo apt update
 $ sudo apt install curl wget apt-transport-https -y
@@ -198,18 +198,14 @@ uninstall the plugin if you can
 then say
 http://18.119.121.130:32323/restart and say yes to reload
 
-11. checkout the code
-https://github.com/justmeandopensource/playjenkins.git
-switch to kaniko branch
-
-12. Kaniko is a tool developed by google
+11. Kaniko is a tool developed by google
 By using this tool you can build container images without having access to the container runtime.
 You no need to have connect to a docker socket. You don't need to have any container running in runtime
 You just need the kaniko tool that's it.
 In Kaniko if you pass a Dockerfile and destination file location like where you want to push your images
 Then Kaniko will build the image for you and push it to any specified image registry .
 
-13. Then we got one more stage that is to Deploy the App into the Kubernetes
+12. Then we got one more stage that is to Deploy the App into the Kubernetes
 See how we previously do deployments in kubernetes is
 by using Kubernetes Continuous Deploy pipeline which is already deprecated
 As we are not going to use that plugin, we have to use a different approach
@@ -219,7 +215,7 @@ then we need to create a credential called mykubeconfig and that will contain my
 and will store as a variable called KUBECONFIG
 Then you can use kubectl command in your container
 
-14. Here am not using any plugin, am using a container that having kubectl binaries inside it
+13. Here am not using any plugin, am using a container that having kubectl binaries inside it
 So am using a very specific docker container that has kubectl binary in it
 so once i lunch the container, will be able to use kubectl
 also am having the kubeconfig file that has been picked from jenkins credential store
@@ -227,7 +223,7 @@ That we are going to create now in sometime
 And the build and push stage is done by the kaniko command line and
 am using a specific container that has kaniko tool built-in
 
-15. The entire pipeline is going to be run on the kubernetes pod define in the builder.yaml
+14. The entire pipeline is going to be run on the kubernetes pod define in the builder.yaml
 Let see builder.yaml
 Its a pod definition file, which contains two containers
 one is kubectl container and the other one is the kaniko container
@@ -236,7 +232,7 @@ the first stage is build and push stage is going to run in a container called ka
 and the second stage is going to run in a container called kubectl
 and those containers details are stored in build.yaml
 
-16. In case of kaniko i need to pass an extra volume mount which we need to create
+15. In case of kaniko i need to pass an extra volume mount which we need to create
 The work that kaniko has to do is
 once it build the container image based on the specification in the Dockerfile
 it needs to push to an image registry,
@@ -247,23 +243,23 @@ and we would be mounting that secrets as a volume inside the kaniko container
 so that kaniko can use the docker credential to push the image to the image registry
 So only by two stages we are doing the CICD Pipeline
 
-17. So we need to do two things
+16. So we need to do two things
 we need to create a mykubeconfig jenkins credential
 then i need to create a docker secret using my docker credentials
 
-18. Go to Jenkins then Manage jenkins then manage credentials
+17. Go to Jenkins then Manage jenkins then manage credentials
 click on jenkins then global credentials the add credentials
 select kind as secret file
 select config file(if not copy from .kube directory)
 ID as mykubeconfig and say ok
 
-19. The next thing we need to create a kubernetes secret that contains the docker credentials
+18. The next thing we need to create a kubernetes secret that contains the docker credentials
 google docker secrets in kubernetes
 then open official link and search for configure-pod-container or
 https://kubernetes.io/docs/tasks/configure-pod-container/_print/
 # kubectl create secret docker-registry regcred --docker-server=<your-registry-server> --docker-username=<your-name> --docker-password=<your-pword> --docker-email=<your-email>
 put your details
-# kubectl -n jenkins create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username=swagatkm --docker-password=Swagat@1994 --docker-email=swagatkumarmishra888@gmail.com
+# kubectl -n jenkins create secret docker-registry regcred --docker-server=https://index.docker.io/v1/ --docker-username=swagatkm --docker-password=<your-pword> --docker-email=swagatkumarmishra888@gmail.com
 after executing will get secret/regcred created
 verify it by
 # kubectl -n jenkins get secret
@@ -271,7 +267,7 @@ you can see a credential called regcred
 
 This things in jenkins you can also set it manually
 
-20. Then create pipeline called pipeline-project then select pipeline script from scm
+19. Then create pipeline called pipeline-project then select pipeline script from scm
 then give details and build
 while building run your jenkins log in your terminal
 # kubectl -n jenkins logs -f jenkins-0 -c jenkins
